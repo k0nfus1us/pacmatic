@@ -7,11 +7,11 @@ pkgdesc="A pacman wrapper to avoid bricking your system and such other surprises
 arch=('any')
 url="http://kmkeen.com/pacmatic/"
 license=('GPL')
-depends=('pacman' 'bash' 'expac')
+depends=('pacman' 'bash' 'expac' 'python-html2text' 'python-feedparser')
 makedepends=()
 optdepends=('vim: for vimdiff'
-            'html2text: for prettier news'
-            'fakeroot: for cron-pacmatic script')
+            'fakeroot: for cron-pacmatic script'
+            
 source=("http://kmkeen.com/$pkgname/$pkgname-$pkgver.tar.gz"
         "_pacmatic")
 md5sums=('1fe11adaa39aae9d3146ddbc3808eb23'

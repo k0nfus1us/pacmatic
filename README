@@ -1,0 +1,9 @@
+This is a fork of pacmatic (https://github.com/keenerd/pacmatic) with some changes to the RSS parser
+RSS handling and output formatting is now handled by the arch-rss-cli.py script.
+
+TODO:
+test
+fix PKGBUILD
+investigate alternatives to the arch-announce RSS feed or mailing list
+move all functionality into .py?
+

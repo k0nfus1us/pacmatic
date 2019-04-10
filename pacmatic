@@ -9,13 +9,12 @@ pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
 config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
-h2t_options="--protect-links --ignore-images"
+#h2t_options="--protect-links --ignore-images"
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 # keep track of the last mail stamp in $config
 
 # Issues:
-# Lots of dirty hacks for processing the RSS subset of XML.
 # pacdiff integration is pretty crude.
 # Switch to a real config file if it gets one more option.
 
@@ -24,8 +23,6 @@ h2t_options="--protect-links --ignore-images"
 # Merge serial seds.
 # Backup db.
 # Conf file for vars.
-# edit pacnews from newest to oldest
-# fix \n in news?
 # mailing list assumes gz'd text archives
 
 # sledgehammer says to watch arch-dev-public and arch-commits
@@ -52,23 +49,6 @@ mail_summary()  # None : None, set $mail_counts and save new stamp
     fi
 }
 
-clean_rss()  # none : xml
-{
-    # make xml less unfriendly to grep
-    # escape \n | remove literal \n | opening tags get a line
-    curl --connect-timeout 10 -s -o - "$rss_feed" | \
-    sed "s/^/\\\\n/g" | tr -s "\r\n" " " | sed -r "s/<[^\/]/\n&/g"
-}
-
-tag_chop()  # xml string : string
-{
-    # this only works for the innermost tags
-    local data=$1
-    local tag=$2
-    #sed "s/<[\/]\?$tag>//g"  sed "s|</?$tag>||g"
-    echo "$data" | grep -o "<$tag>.*</$tag>" | sed "s/<$tag>//g" | sed "s/<\/$tag>//g"
-}
-
 log_time()  # datetime : seconds
 {
     # turns a timestamp from pacman.log into unix time
@@ -88,60 +68,32 @@ last_upgrade()  # none : datetime
     log_time $(grep 'starting full system upgrade' "$pacman_log" | tail -n 1)
 }
 
-publication_dates()  # xml : seconds
-{
-    # collect xml time stamps and unix time them
-    tag_chop "$1" "pubDate" | while read line ; do
-        date -d "$line" +%s
-    done
-}
-
 get_news_log()  # none : seconds
 {
     # returns timestamp of last news seen
     if [ -f $log_file ]; then
-        tail -n 1 $log_file | grep -o "^[0-9]*"
+        cat $log_file | grep -Eo "[[:alpha:]]{3}, [[:digit:]]{2} [[:alpha:]]{3} [[:digit:]]{4}" | tail -n1
     else
         echo "0"
     fi
 }
 
-xml_decode() # string : string
-{
-    echo "$1" | sed 's/\t/ /g' | tr -s ' ' | sed 's/&lt;/</g' | sed 's/&gt;/>/g' | sed 's/&amp;/&/g'
-}
-
 check_news()  # none : news (logfile)
 {
     last_news_date=$(get_news_log)
-    clean=$(clean_rss)
-    pubdates=$(mktemp)
-    descriptions=$(mktemp)
-    header="The latest and greatest news from the Arch Linux distribution."
-    publication_dates "$clean" > "$pubdates"
-    tag_chop "$clean" "description" | grep -v "$header" > "$descriptions"
+    date_diff=$(( ($(date +%s) - $(date -d "$last_news_date" +%s) )/(60*60*24) ))
+#    echo "date_diff=$date_diff"
+
+    check_news_thr=$(( "$date_diff" -1 ))
     if [[ ! -s "$log_file" ]]; then
         echo "Initializing news archive, expect a flood of news."
         echo "This will not happen on subsequent launches."
-        sleep 5
+        check_news_thr="-1"
     fi
-    # paste is much happier with files
-    paste "$pubdates" "$descriptions" | tac | while read -r line ; do
-    line2=$(xml_decode "$line")
-    this_date=$(echo -n "$line2" | cut -d ' ' -f 1 | sed 's/ //g')
-    if [ $(( $this_date )) -gt $(( $last_news_date )) ]; then
-        line3=$(cut -d ' ' -f 2- <<< "$line2")
-        if which html2text >& /dev/null; then
-            echo "$line3" | html2text $h2t_options | sed 's/\\n$//'
-        else
-            echo "$line3" | sed -e 's|<br />|\n|g' -e 's|\\n||g' -e 's|<p>|\n|g' -e 's|</p>||g'
-        fi
-        echo
-        echo "$line2" >> $log_file
-    fi
-    done
-    rm "$pubdates"
-    rm "$descriptions"
+    #using arch-rss-cli.py to fetch and parse the RSS feed updates
+    python arch-rss-cli.py $check_news_thr #TBD: pipe ANSI controls to stdout, strip for log_file
+    python arch-rss-cli.py $check_news_thr >> $log_file
+
 }
 
 check_checkspace() # none : return value
@@ -162,7 +114,7 @@ Usage: `basename $0` -options [packages]
 Pacmatic is a pacman wrapper that takes care of menial but critial tasks.
 
 These include
-    Checking the archlinux.org news
+    Checking the archlinux.org news RSS feed
     Summarizing the arch-general mailing list
     Reminding if it has been a while since the last sync
     Reporting pacnew files
