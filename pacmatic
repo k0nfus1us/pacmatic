@@ -91,8 +91,7 @@ check_news()  # none : news (logfile)
         check_news_thr="-1"
     fi
     #using arch-rss-cli.py to fetch and parse the RSS feed updates
-    python arch-rss-cli.py $check_news_thr #TBD: pipe ANSI controls to stdout, strip for log_file
-    python arch-rss-cli.py $check_news_thr >> $log_file
+    python arch-rss-cli.py $check_news_thr |tee -a $log_file #TBD: pipe ANSI controls to stdout, strip for log_file?
 
 }
 
