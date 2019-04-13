@@ -32,8 +32,7 @@ feed_date = datetime.date.fromtimestamp(mktime(str_feed_upd))
 fetch_date = datetime.date.today() - datetime.timedelta(days=time_days_fetch)
 
 if(feed_date < fetch_date):
-    print(str_cdots + 'no RSS updates since {:s} [{:s}]'.format(str(feed_date),rss_url))
-    print(Style.RESET_ALL)
+    print(str_cdots + 'RSS: no updates since ' + str(feed_date) + Style.RESET_ALL)
     exit()
 # Store feed items in an array
 items = feed["items"]
