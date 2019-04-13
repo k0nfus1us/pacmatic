@@ -47,6 +47,13 @@ mail_summary()  # None : None, set $mail_counts and save new stamp
         mkdir -p $(dirname "$config")
         echo "$new_stamp" > "$config"
     fi
+
+    if [ -n "$mail_counts" ]; then
+        echo ":: Recent ML chatter: $mail_counts"
+    else 
+        echo ":: ML: no updates"
+    fi
+
 }
 
 log_time()  # datetime : seconds
@@ -151,7 +158,6 @@ case "$1" in
         check_news &
         mail_summary
         wait
-        echo "Recent ML chatter: $mail_counts"
         if ( ! check_checkspace ); then
             echo -e "\nPlease enable CheckSpace in pacman.conf"
         fi
