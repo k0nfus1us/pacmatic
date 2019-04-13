@@ -3,13 +3,13 @@
 # configs
 warn_time="${warn_time:-86400}"  # seconds
 rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
+#rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
 mail_list="${mail_list:-https://lists.archlinux.org/pipermail/arch-general/$(LC_ALL=C printf '%(%Y-%B)T\n' -1).txt.gz}"
 log_file="${log_file:-/var/log/arch-news.log}"
 pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
 pacman_program="${pacman_program:-pacman}"
 config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
-#h2t_options="--protect-links --ignore-images"
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
 # keep track of the last mail stamp in $config
@@ -80,18 +80,18 @@ get_news_log()  # none : seconds
 
 check_news()  # none : news (logfile)
 {
-    last_news_date=$(get_news_log)
-    date_diff=$(( ($(date +%s) - $(date -d "$last_news_date" +%s) )/(60*60*24) ))
-#    echo "date_diff=$date_diff"
+    check_news_thr="0"
 
-    check_news_thr=$(( "$date_diff" -1 ))
     if [[ ! -s "$log_file" ]]; then
         echo "Initializing news archive, expect a flood of news."
         echo "This will not happen on subsequent launches."
-        check_news_thr="-1"
+    else
+        last_news_date=$(get_news_log)
+        date_diff=$(( ($(date +%s) - $(date -d "$last_news_date" +%s) )/(60*60*24) ))
+        check_news_thr=$(( "$date_diff" -1 ))
     fi
     #using arch-rss-cli.py to fetch and parse the RSS feed updates
-    python arch-rss-cli.py $check_news_thr |tee -a $log_file #TBD: pipe ANSI controls to stdout, strip for log_file?
+    python arch-rss-cli.py $check_news_thr $log_file 
 
 }
 

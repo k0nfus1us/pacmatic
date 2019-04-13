@@ -8,14 +8,19 @@ from time import mktime
 from colorama import init, Fore, Style
 init()
 
-str_cdots = Fore.BLUE + Style.BRIGHT + ":: " + Fore.RESET
-time_days_fetch = 30
-if len(sys.argv) == 2: 
+str_dots = ":: "
+str_cdots = Fore.BLUE + Style.BRIGHT + str_dots + Fore.RESET
+time_days_fetch = 365*2 #2 years should be enough
+f_log = 0
+
+if len(sys.argv) == 2 or len(sys.argv) == 3: 
     if int(sys.argv[1]) >0:
         time_days_fetch = int(sys.argv[1]) 
-    else:
-        time_days_fetch = 365*10 #10 years should be enough
 
+if len(sys.argv) == 3: 
+    outfile = sys.argv[2]
+    f_log=open(outfile,"a+")
+    
 # Feed URL
 rss_url = "https://www.archlinux.org/feeds/news/"
 
@@ -59,9 +64,15 @@ for item in rss_str_arr:
 
     for text in lines[:2]:
         print(str_cdots + text)    
+        if f_log:
+            f_log.write(str_dots + text + '\n')
 
     print(Style.RESET_ALL)
 
     for text in lines[2:]:
-        print(" " + text)    
+        print(text)    
+        if f_log:
+            f_log.write(text + '\n')
 
+if f_log:
+    f_log.close()
