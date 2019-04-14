@@ -4,7 +4,7 @@ import sys
 import feedparser
 import html2text
 import datetime
-from time import mktime
+from time import mktime, strftime
 from colorama import init, Fore, Style
 init()
 
@@ -43,10 +43,11 @@ html = ""
 # Store needed item elements in html variable in a reverse order
 # Also, add some HTML tags to make the text more readable
 for item in reversed(items):
-    item_date = datetime.date.fromtimestamp(mktime(item["published_parsed"])) 
+    item_date = datetime.date.fromtimestamp(mktime(item["published_parsed"]))  
     if item_date >= fetch_date:
         #datetime(*timetup[:6]).isoformat()  
-        html = html + "<hr>" + item["published"] + "<br>" + \
+        date_str = "[{:s}]".format(strftime("%Y-%m-%d %H:%M",item["published_parsed"]))
+        html = html + "<hr>" + date_str + "<br>" + \
             item["title"] + "<br>" + \
             item["summary"] + "<br>"
 
