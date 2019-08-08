@@ -3,12 +3,11 @@
 # configs
 warn_time="${warn_time:-86400}"  # seconds
 rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
-#rss_feed="${rss_feed:-https://www.archlinux.org/feeds/news/}"
 mail_list="${mail_list:-https://lists.archlinux.org/pipermail/arch-general/$(LC_ALL=C printf '%(%Y-%B)T\n' -1).txt.gz}"
 log_file="${log_file:-/var/log/arch-news.log}"
 pacman_log="${pacman_log:-/var/log/pacman.log}"
 pacdiff_program="${pacdiff_program:-pacdiff}"
-pacman_program="${pacman_program:-pacman}"
+pacman_program="${pacman_program:-yay}"
 config="${config:-$HOME/.config/pacmatic}"  # not really a config file ;-)
 
 # log file has one line per entry, with a unix time stamp and escaped news blurb
@@ -98,8 +97,8 @@ check_news()  # none : news (logfile)
         date_diff=$(( ($(date +%s) - $(date -d "$last_news_date" +%s) )/(60*60*24) ))
         check_news_thr=$(( "$date_diff" -1 ))
     fi
-    #using arch-rss-cli.py to fetch and parse the RSS feed updates
-    python arch-rss-cli.py $check_news_thr $log_file 
+    #using arch-rss-cli.py to fetch and parse RSS feed updates
+    sudo python arch-rss-cli.py $check_news_thr $log_file 
 
 }
 
@@ -156,7 +155,7 @@ upgrade_time=$(last_upgrade)
 case "$1" in
     -Syu|-Su|-Suy|-Syyu|-Syuy|-Suyy|-S|-Sy|-Syy)
         # do not like this threading
-        check_news &
+        check_news
         mail_summary
         wait
         if ( ! check_checkspace ); then
